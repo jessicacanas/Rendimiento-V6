@@ -1,0 +1,91 @@
+version: '3'
+
+services:
+
+  mysql:
+    image: mysql:5.6
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'imagenes'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3309:3309'
+    volumes:
+      - ./var/mysql:/var/lib/mysql
+    healthcheck:
+      test: "/usr/bin/mysql --user=root --password=password --execute \"SHOW DATABASES;\""
+      interval: 2s
+      timeout: 20s
+      retries: 3
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./www/html:/code
+      - ./etc/nginx/default.conf:/etc/nginx/conf.d/default.conf
+
+  php:
+    build: ./ops/php-fpm
+    volumes:
+      - ./www/html:/code
+      - ./etc/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./var/redis:/data
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+      RABBITMQ_DEFAULT_VHOST: "/"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.7.0
+    user: root
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "TAKE_FILE_OWNERSHIP=1"
+    volumes:
+      - ./var/elasticsearch/data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.7.0
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
+    depends_on:
+      - elasticsearch
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-f", "http://localhost:5601/"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  blackfire:
+    image: blackfire/blackfire
+    environment:
+      BLACKFIRE_CLIENT_ID: "3a872c67-6a44-4534-9486-fb0d8b78a171"
+      BLACKFIRE_CLIENT_TOKEN: "44202fb1b62d73b02f914b651fdddec39a76a03fde03b7c648a3c31122f98830"
+      BLACKFIRE_SERVER_ID: "311084d1-d001-4220-ad66-561fd92c5ee9"
+      BLACKFIRE_SERVER_TOKEN: "8328d8e76c448f0c259b2a190730cfedd8c597e9142ab2b1e0629c4a81ab0dfb"

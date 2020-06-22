@@ -1,0 +1,36 @@
+
+.main
+{
+    font-family:Segoe, "Segoe UI", "DejaVu Sans", "Trebuchet MS", Verdana, sans-serif;
+    margin:auto;
+    text-align:left;
+    padding:30px;
+    background-image: linear-gradient(blueviolet, deepskyblue);
+}
+
+.titulo
+{
+    color: white;
+}
+
+#search
+{
+    border: none;
+}
+
+.buscador
+{
+    height:25px;
+    margin-left: 600px;
+    margin-bottom: 50px;
+    font-size:16px;
+    border: none;
+}
+
+footer
+{
+    color: white;
+    font-weight: bold;
+    text-align:right;
+}
+
